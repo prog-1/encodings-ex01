@@ -7,9 +7,7 @@ import (
 
 const base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
-// Encode encodes src using base64 encoding.
-// SGVsbG8sIHdvcmxk
-func Encode(src []byte) (dst []byte) {
+func encodeSwitch(src []byte) (dst []byte) {
 	switch len(src) {
 	case 3:
 		return []byte{
@@ -34,16 +32,23 @@ func Encode(src []byte) (dst []byte) {
 			'=',
 		}
 	default:
-		if len(src) != 0 {
-			return append([]byte{
-				base64[src[0]>>2],
-				base64[(src[0]&0b00000011)<<4|src[1]>>4],
-				base64[(src[1]&0b00001111)<<2|src[2]>>6],
-				base64[src[2]&0b00111111],
-			}, Encode(src[3:])...)
-		}
 		return nil
 	}
+}
+
+// Encode encodes src using base64 encoding.
+// SGVsbG8sIHdvcmxk
+func Encode(s []byte) (dst []byte) {
+	var src []byte
+	for src = s; len(src) > 3; src = src[3:] {
+		dst = append(dst,
+			base64[src[0]>>2],
+			base64[(src[0]&0b00000011)<<4|src[1]>>4],
+			base64[(src[1]&0b00001111)<<2|src[2]>>6],
+			base64[src[2]&0b00111111],
+		)
+	}
+	return append(dst, encodeSwitch(src)...)
 }
 
 func Convert(a []byte) []byte {
@@ -69,45 +74,44 @@ func filter(a []byte) []byte {
 	return a
 }
 
-func Decode(src []byte) []byte {
-	return decode(Convert(src))
-}
-
-// Decode decodes base64 encoded src.
-func decode(src []byte) (dst []byte) {
+func decodeSwitch(src []byte) []byte {
 	switch len(src) {
 	case 4:
 		return filter([]byte{
-			src[0]<<2 | (src[1]>>4)&0b00000011,
-			((src[1] & 0b00001111) << 4) | (src[2] >> 2),
-			((src[2] & 0b00000011) << 6) | src[3],
+			src[0]<<2 | (src[1] >> 4),
+			(src[1] << 4) | (src[2] >> 2),
+			(src[2] << 6) | src[3],
 		})
 	case 3:
 		return filter([]byte{
-			src[0]<<2 | (src[1]>>4)&0b00000011,
-			((src[1] & 0b00001111) << 4) | (src[2] >> 2),
-			((src[2] & 0b00000011) << 6),
+			src[0]<<2 | (src[1] >> 4),
+			(src[1] << 4) | (src[2] >> 2),
+			(src[2] << 6),
 		})
 	case 2:
 		return filter([]byte{
-			src[0]<<2 | (src[1]>>4)&0b00000011,
-			((src[1] & 0b00001111) << 4),
+			src[0]<<2 | (src[1] >> 4),
+			(src[1] << 4),
 		})
 	case 1:
 		return filter([]byte{
 			src[0] << 2,
 		})
 	default:
-		if len(src) != 0 {
-			return filter(
-				append(
-					[]byte{src[0]<<2 | (src[1]>>4)&0b00000011,
-						((src[1] & 0b00001111) << 4) | (src[2] >> 2),
-						((src[2] & 0b00000011) << 6) | src[3]},
-					decode(src[4:])...))
-		}
+		return nil
 	}
+}
 
-	return
-	//res = []byte{src[0]<<2 | (src[1]>>4)&0b00000011, ((src[1] & 0b00001111) << 4) | (src[2] >> 4), ((src[2] & 0b00000011) << 6) | src[3]}
+// Decode decodes base64 encoded src.
+func Decode(s []byte) (dst []byte) {
+	Convert(s)
+	var src []byte
+	for src = s; len(src) > 4; src = src[4:] {
+		dst = append(dst, filter([]byte{
+			src[0]<<2 | (src[1] >> 4),
+			(src[1] << 4) | (src[2] >> 2),
+			(src[2] << 6) | src[3],
+		})...)
+	}
+	return append(dst, decodeSwitch(src)...)
 }
