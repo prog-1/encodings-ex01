@@ -1,14 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"encodings-ex01/base64"
+	"encodings-ex01/base85"
 	"fmt"
 )
 
 func main() {
-	input := []byte("implement me")
-	encoded := base64.Encode(input)
-	decoded := base64.Decode(encoded)
-	fmt.Println(bytes.Equal(input, decoded))
+	fmt.Println(string(base85.Decode([]byte("9jqo^"))))
 }
