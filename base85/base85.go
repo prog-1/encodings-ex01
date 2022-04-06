@@ -4,9 +4,7 @@ func Encode(src []byte) (res []byte) {
 	if len(src) == 0 {
 		return nil
 	}
-
 	for len(src) > 0 {
-
 		var v uint32
 		switch len(src) {
 		default:
@@ -25,12 +23,8 @@ func Encode(src []byte) (res []byte) {
 			res = append(res, 'z')
 			if len(src) >= 4 {
 				src = src[4:]
-			} else if len(src) == 3 {
-				src = src[3:]
-			} else if len(src) == 2 {
-				src = src[2:]
-			} else if len(src) == 1 {
-				src = src[1:]
+			} else {
+				src = nil
 			}
 			continue
 		}
@@ -47,6 +41,35 @@ func Encode(src []byte) (res []byte) {
 			src = src[4:]
 		} else {
 			src = nil
+		}
+	}
+	return res
+}
+func Decode(src []byte) (res []byte) {
+
+	if len(src) == 0 {
+		return nil
+	}
+	var v uint32
+	var nb int
+	for _, b := range src {
+		switch {
+		case b <= ' ':
+			continue
+		case b == 'z' && nb == 0:
+			nb = 5
+			v = 0
+		case '!' <= b && b <= 'u':
+			v = v*85 + uint32(b-'!')
+			nb++
+		}
+		if nb == 5 {
+			res = append(res, byte(v>>24))
+			res = append(res, byte(v>>16))
+			res = append(res, byte(v>>8))
+			res = append(res, byte(v))
+			nb = 0
+			v = 0
 		}
 	}
 	return res
