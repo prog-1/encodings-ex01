@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	input := []byte("implement me")
+	input := []byte("Twelve years later")
 	encoded := base64.Encode(input)
 	decoded := base64.Decode(encoded)
 	fmt.Println(bytes.Equal(input, decoded))
