@@ -8,7 +8,7 @@ import (
 
 func main() {
 	input := []byte("implement me")
-	encoded := base64.Encode(input)
-	decoded := base64.Decode(encoded)
-	fmt.Println(bytes.Equal(input, decoded))
+	encodedBase64 := base64.Encode(input)
+	decodedBase64 := base64.Decode(encodedBase64)
+	fmt.Println(bytes.Equal(input, decodedBase64))
 }
